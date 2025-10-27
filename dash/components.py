@@ -118,20 +118,40 @@ class Components:
 
         grouped = grouped.sort_index()
 
+        grouped["Despesa"] = grouped["Despesa"] * -1
+
+        average = grouped["Receita"] + grouped["Despesa"]
+        average = average.cumsum()
+
         fig: Figure = go.Figure()
 
         fig.add_trace(go.Scatter(
-                        name="Receitas",
-                        mode="markers+lines", 
+                        x=Components.to_str(grouped.index.tolist()),
+                        y=average.values.tolist(),
+                        name="Saldo do mês",
+                        marker_color="white"
+
+        ))
+
+        fig.add_trace(go.Bar(
                         x=Components.to_str(grouped.index.tolist()), 
-                        y=grouped["Receita"].tolist()
+                        y=grouped["Receita"].tolist(),
+                        name="Receita",
+                        marker_color="#2739C2"
                     ))
         
-        fig.add_trace(go.Scatter(
-                        name="Despesas",
-                        mode="markers+lines", 
+        fig.add_trace(go.Bar(
+                        
                         x=Components.to_str(grouped.index.tolist()), 
-                        y=grouped["Despesa"].tolist()
+                        y=grouped["Despesa"].tolist(),
+                        name="Despesa",
+                        marker_color="#A5B3FF"
                     ))
+        
+        fig.update_layout(
+            barmode='relative',
+            bargap=0.7,
+            height=500
+        )
     
         return fig

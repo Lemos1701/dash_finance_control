@@ -171,6 +171,6 @@ st.markdown(f"""
     </div>    
     """, 
     unsafe_allow_html=True)
-
-
-st.plotly_chart(Components.expenses_vs_income())
+col1, col2, col3 = st.columns([1, 6, 0.8])
+with col2:
+    st.plotly_chart(Components.expenses_vs_income(), use_container_width=False)
