@@ -19,53 +19,30 @@ class KPI:
         DataManager.check_if_exist(DataManager.DATA_PATH)
 
         df: pd.DataFrame = DataManager.read_file()
-        
-        current_date: pd.Timestamp = pd.Timestamp.now()
-        year: int = current_date.year
 
-        total_income: float = df[
-                        (df['year']  == year) &
-                        (df['type'] == "Receita")]['value'].sum()
+        total: pd.Series = df.groupby("type")['value'].sum()
 
-        total_expense: float = df[
-                        (df['year']  == year) &
-                        (df['type'] == "Despesa")]['value'].sum()
-
-        return total_income - total_expense
+        return total['Receita'] - total['Despesa']
 
     @staticmethod
     def get_income_month()-> float:
         DataManager.check_if_exist(DataManager.DATA_PATH)
         
         df: pd.DataFrame = DataManager.read_file()
-        current_date: pd.Timestamp = pd.Timestamp.now()
-        month: int = current_date.month
-        year: int = current_date.year
 
-        total_income: float = df[
-                        (df['month'] == month) &
-                        (df['year'] == year) &
-                        (df['type'] == "Receita")
-                        ]['value'].sum()
-            
-        return total_income
+        total: pd.DataFrame = df.groupby([df['date'].dt.to_period('M'), "type"])['value'].sum().unstack(fill_value=0)
+
+        return total["Receita"].iloc[-1]
 
     @staticmethod
     def get_expense_month()-> float:
         DataManager.check_if_exist(DataManager.DATA_PATH)
-
-        df: pd.DataFrame = DataManager.read_file()
         
-        current_date: pd.Timestamp = pd.Timestamp.now()
-        month: int = current_date.month
-        year: int = current_date.year
+        df: pd.DataFrame = DataManager.read_file()
 
-        total_expense: float = df[
-                        (df['month'] == month) &
-                        (df['year'] == year) &
-                        (df['type'] == "Despesa")]['value'].sum()
+        total: pd.DataFrame = df.groupby([df['date'].dt.to_period('M'), "type"])['value'].sum().unstack(fill_value=0)
 
-        return total_expense
+        return total["Despesa"].iloc[-1]
 
     @staticmethod
     def total_savings()-> float:

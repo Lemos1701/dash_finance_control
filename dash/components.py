@@ -1,6 +1,5 @@
 import pandas as pd
-import time
-from typing import List
+from typing import List, Any
 import plotly.graph_objects as go
 from plotly.graph_objs._figure import Figure
 from data_manager import DataManager
@@ -47,25 +46,20 @@ class Components:
         return fig
 
     @staticmethod
-    def to_str(indexes: List[int])-> List[str]:
-        month: List[str] = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"]
+    def to_str(indexes: List[Any])-> List[str]:
 
-        str_list: List[str] = []
-
-        for i in indexes:
-            str_list.append(month[i - 1])
-
-        return str_list
+        if not isinstance(indexes, pd.Timestamp):
+            indexes = indexes.to_timestamp()
+            
+        return indexes.strftime('%b/%Y').tolist()
     
     @staticmethod
-    def expense_types_graphics(expense_type)-> Figure:
+    def expense_types_graphics(expense_type: str)-> Figure:
         DataManager.check_if_exist(DataManager.DATA_PATH)
 
         df: pd.DataFrame = DataManager.read_file()
-        current_year: int = pd.Timestamp.now().year
 
-        df_current: pd.DataFrame = df[(df['year'] == current_year) &
-                        (df['reason'] == expense_type)]
+        df_current: pd.DataFrame = df[df['reason'] == expense_type]
         
         if df_current.empty:
             fig: Figure = go.Figure()
@@ -78,11 +72,13 @@ class Components:
             return fig
         
 
-        grouped: pd.Series = df_current.groupby('month')['value'].sum()
+        grouped: pd.Series = df_current.groupby(df['date'].dt.to_period('M'))['value'].sum()
+
+        grouped = grouped.tail()
 
         fig: Figure = go.Figure(go.Scatter(
                         mode="markers+lines", 
-                        x=Components.to_str(grouped.index.tolist()), 
+                        x=Components.to_str(grouped.index), 
                         y=grouped.values.tolist()
                     ))
         
@@ -94,12 +90,9 @@ class Components:
     def expenses_vs_income()-> Figure:
         DataManager.check_if_exist(DataManager.DATA_PATH)
 
-        current_year: int = pd.Timestamp.now().year
         df: pd.DataFrame = DataManager.read_file()
 
-        df_current: pd.DataFrame = df[df['year'] == current_year]
-
-        if df_current.empty:
+        if df.empty:
             fig: Figure= go.Figure()
             fig.update_layout(height=353) 
             fig.add_annotation(
@@ -108,8 +101,8 @@ class Components:
                 font=dict(size=21)
             )
             return fig
-
-        grouped: pd.DataFrame = df_current.groupby(['month', 'type'])['value'].sum().unstack(fill_value=0)
+        
+        grouped = df.groupby([df['date'].dt.to_period('M'), 'type'])['value'].sum().unstack(fill_value=0)
 
         if 'Receita' not in grouped:
             grouped['Receita'] = 0
@@ -123,10 +116,14 @@ class Components:
         average = grouped["Receita"] + grouped["Despesa"]
         average = average.cumsum()
 
+        grouped = grouped.tail(6)
+        average = average.tail(6)
+
+
         fig: Figure = go.Figure()
 
         fig.add_trace(go.Scatter(
-                        x=Components.to_str(grouped.index.tolist()),
+                        x=Components.to_str(grouped.index),
                         y=average.values.tolist(),
                         name="Saldo do mês",
                         marker_color="white"
@@ -134,7 +131,7 @@ class Components:
         ))
 
         fig.add_trace(go.Bar(
-                        x=Components.to_str(grouped.index.tolist()), 
+                        x=Components.to_str(grouped.index), 
                         y=grouped["Receita"].tolist(),
                         name="Receita",
                         marker_color="#2739C2"
@@ -142,7 +139,7 @@ class Components:
         
         fig.add_trace(go.Bar(
                         
-                        x=Components.to_str(grouped.index.tolist()), 
+                        x=Components.to_str(grouped.index), 
                         y=grouped["Despesa"].tolist(),
                         name="Despesa",
                         marker_color="#A5B3FF"

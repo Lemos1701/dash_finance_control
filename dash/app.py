@@ -14,9 +14,9 @@ savings: float = KPI.total_savings()
 def expense_dialog()-> None:
     expense_value: float = st.number_input("Valor da despesa", min_value=0.0)
     expense_type: str = st.selectbox('Escolha o tipo da despesa', KPI.EXPENSES_TYPES)
-    expense_data: date = st.date_input('Selecione a data da despesa')
+    expense_date: date = st.date_input('Selecione a data da despesa')
 
-    data: List[Any] = [expense_value, "Despesa", expense_type, expense_data.day, expense_data.month, expense_data.year]
+    data: List[Any] = [expense_value, "Despesa", expense_type, expense_date]
     if st.button("Salvar"):
         DataManager.write('./data/data.csv', data)
         st.rerun()
@@ -24,9 +24,9 @@ def expense_dialog()-> None:
 @st.dialog("Nova receita")
 def income_dialog()-> None:
     income_value: float = st.number_input("Valor da receita", min_value=0.0)
-    income_data: date = st.date_input('Selecione a data da receita')
+    income_date: date = st.date_input('Selecione a data da receita')
 
-    data: List[Any] = [income_value, "Receita", "N/A", income_data.day, income_data.month, income_data.year]
+    data: List[Any] = [income_value, "Receita", "N/A", income_date]
     if st.button("Salvar"):
         DataManager.write('./data/data.csv', data)
         st.rerun()
@@ -34,10 +34,10 @@ def income_dialog()-> None:
 @st.dialog("Mover para poupança")
 def savings_dialog()-> None:
     saving_value: float = st.number_input("Valor desejado", min_value=0.0)
-    saving_data: date = st.date_input('Selecione a data transação')
+    saving_date: date = st.date_input('Selecione a data transação')
 
-    data: List[Any] = [saving_value, "N/A", "N/A", saving_data.day, saving_data.month, saving_data.year]
-    expense_data: List[Any] = [saving_value, "Despesa", "Outros", saving_data.day, saving_data.month, saving_data.year]
+    data: List[Any] = [saving_value, "N/A", "N/A", saving_date]
+    expense_data: List[Any] = [saving_value, "Despesa", "Outros", saving_date]
     if st.button("Salvar"):
         if acount >= saving_value:
             DataManager.write('./data/savings.csv', data)
@@ -171,6 +171,8 @@ st.markdown(f"""
     </div>    
     """, 
     unsafe_allow_html=True)
+
 col1, col2, col3 = st.columns([1, 6, 0.8])
+
 with col2:
     st.plotly_chart(Components.expenses_vs_income(), use_container_width=False)

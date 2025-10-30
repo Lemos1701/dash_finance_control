@@ -12,7 +12,7 @@ class DataManager:
         if not os.path.exists(file_name):
             with open(file_name, mode="w", newline="", encoding="utf-8") as file:
                 writer: Any = csv.writer(file, lineterminator="\n")
-                writer.writerow(["value", "type", "reason", "day", "month", "year"])
+                writer.writerow(["value", "type", "reason", "date"])
 
     @staticmethod
     def write(file_name: str, data: List)-> None:
@@ -26,7 +26,7 @@ class DataManager:
     def read_file(file_name: str=DATA_PATH)-> pd.DataFrame:
         DataManager.check_if_exist(file_name)
 
-        return pd.read_csv(file_name)
+        return pd.read_csv(file_name, parse_dates=['date'])
     
     @staticmethod
     def read_savings()-> pd.DataFrame:
